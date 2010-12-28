@@ -19,7 +19,9 @@
 package com.lego.minddroid;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -43,6 +45,9 @@ public class SplashMenuView extends View {
 	Bitmap ic_splash_legal;
 	Bitmap logo_splash_minddroid;
 	Bitmap mBackgroundImage;
+	
+	String[] mControllers = new String[] {"Tilt Controller", "Touch Controller"};
+	String[] mControllerClassNames = new String[] {GameConnector.TILT, GameConnector.TOUCH};
 
 	public SplashMenuView(Context context, Activity splashMenuActivity) {
 		super(context);
@@ -110,9 +115,17 @@ public class SplashMenuView extends View {
 				Tutorial tutorial = new Tutorial();
 				tutorial.show(splashMenuActivity);
 			} else if (event.getY() > startButtonYStart && event.getY() <= startButtonYStart + ic_splash_start.getHeight()) {
-				Intent playGame = new Intent(splashMenuActivity.getBaseContext(), MINDdroid.class);
-				playGame.putExtra(SplashMenu.MINDDROID_ROBOT_TYPE, ((SplashMenu)splashMenuActivity).getRobotType());
-				splashMenuActivity.startActivity(playGame);
+				new AlertDialog.Builder(splashMenuActivity)
+					.setTitle("Choose Activity")
+					.setItems(mControllers, new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							Intent playGame = new Intent(splashMenuActivity.getBaseContext(), MINDdroid.class);
+							playGame.putExtra(SplashMenu.MINDDROID_ROBOT_TYPE, ((SplashMenu)splashMenuActivity).getRobotType());
+							playGame.putExtra(MINDdroid.GAME_CONTROLLER, mControllerClassNames[which]);
+							splashMenuActivity.startActivity(playGame);
+						}
+					}).create().show();
 			}
 		}
 		return true;

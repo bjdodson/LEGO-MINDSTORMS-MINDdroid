@@ -30,6 +30,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.widget.Toast;
 
@@ -37,6 +38,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
+
+import com.lego.minddroid.GameConnector.GameThread;
 
 public class MINDdroid extends Activity {
     public static final int UPDATE_TIME = 200;
@@ -50,7 +53,9 @@ public class MINDdroid extends Activity {
     private ProgressDialog connectingProgressDialog;
     private Handler btcHandler;
     private Menu myMenu;
-    private GameView mView;
+    private GameConnector mConnector;
+    private View mView;
+    private GameThread mThread;
     private Activity thisActivity;
     private boolean bt_error_pending = false;
     boolean pairing;
@@ -66,6 +71,8 @@ public class MINDdroid extends Activity {
     private List<String> programList;
     private static final int MAX_PROGRAMS = 20;
     private String programToStart;
+    
+    public static final String GAME_CONTROLLER = "GAME_CONTROLLER";
 
     public static boolean isBtOnByUs() {
         return btOnByUs;
@@ -90,7 +97,15 @@ public class MINDdroid extends Activity {
         StartSound mySound = new StartSound(this);
         mySound.start();
         // setup our view, give it focus and display.
-        mView = new GameView(getApplicationContext(), this);
+        String controllerType = this.getIntent().getStringExtra(GAME_CONTROLLER);
+        if (GameConnector.TOUCH.equals(controllerType)) {
+        	mConnector = new TouchGameConnector(getApplicationContext(), this);
+        } else {
+        	mConnector = new TiltGameConnector(getApplicationContext(), this);
+        }
+        
+        mView = mConnector.getView();
+        mThread = mConnector.getThread();
         mView.setFocusable(true);
         setContentView(mView);
         reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
@@ -196,7 +211,7 @@ public class MINDdroid extends Activity {
 
     public void actionButtonPressed() {
         if (myBTCommunicator != null) {
-            mView.getThread().mActionPressed = true;
+            mThread.mActionPressed = true;
             // depending on what the robot should when pressing the action button
             // you have to uncomment/comment one of the following lines
 
@@ -232,7 +247,7 @@ public class MINDdroid extends Activity {
 
     public void actionButtonLongPress() {
         if (myBTCommunicator != null) {
-            mView.getThread().mActionPressed = true;
+            mThread.mActionPressed = true;
 
             if (programList.size() == 0)
                 showToast(getResources().getString(R.string.no_files_found));                
@@ -322,7 +337,7 @@ public class MINDdroid extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        mView.registerListener();
+        mConnector.registerListener();
     }
 
     @Override
@@ -348,7 +363,7 @@ public class MINDdroid extends Activity {
 
     @Override
     public void onPause() {
-        mView.unregisterListener();
+    	mConnector.unregisterListener();
         destroyBTCommunicator();
         super.onStop();
     }
@@ -356,7 +371,7 @@ public class MINDdroid extends Activity {
     @Override
     public void onSaveInstanceState(Bundle icicle) {
         super.onSaveInstanceState(icicle);
-        mView.unregisterListener();
+        mConnector.unregisterListener();
     }
 
     /**
