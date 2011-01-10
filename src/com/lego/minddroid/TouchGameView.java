@@ -27,10 +27,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -663,40 +659,20 @@ public class TouchGameView extends SurfaceView implements SurfaceHolder.Callback
 	/** The thread that actually draws the animation */
 	private GameThread thread;
 
-	private SensorManager mSensorManager;
-
-	/** orientation (tilt) readings */
+	/** touch readings */
 	private float mAccelX = 0;
 	private float mAccelY = 0;
-	private float mAccelZ = 0; // heading
+	
 	/**time that action button was pressed - used to calc long or short press */
 	long mTimeActionDown=0;
 	 
-	private final SensorEventListener mSensorAccelerometer = new SensorEventListener() {
 
-		@Override
-		public void onAccuracyChanged(Sensor sensor, int accuracy) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void onSensorChanged(SensorEvent event) {
-
-			mAccelX = 0 - event.values[2];
-			mAccelY = 0 - event.values[1];
-			mAccelZ = event.values[0];
-
-		}
-
-	};
 	Context context;
 	public TouchGameView(Context context, MINDdroid uiActivity) {
 		super(context);
 		 
 	//	Log.d(TAG, " ~~~~~~~ UIView ~~~~~~~~");
 		mActivity = uiActivity;
-		mSensorManager = (SensorManager) mActivity.getSystemService(Context.SENSOR_SERVICE);
 		// register our interest in hearing about changes to our surface
 		SurfaceHolder holder = getHolder();
 		holder.setKeepScreenOn(true);
@@ -742,16 +718,26 @@ public class TouchGameView extends SurfaceView implements SurfaceHolder.Callback
 			}
 			break;
 		}
+		} else {
+			
+		switch (event.getAction()) {
+		
+		case MotionEvent.ACTION_DOWN:
+		case MotionEvent.ACTION_MOVE:
+			mAccelX = 100f * ((((float)event.getX()) / this.getWidth()) - 0.5f);
+			mAccelY = 100f * ((((float)event.getY()) / this.getHeight()) - 0.5f);
+			break;
+			
+		case MotionEvent.ACTION_UP:
+			mAccelX = 0;
+			mAccelY = 0;
+		}
 		}
 		return true;
 	}
 
 	public void registerListener() {
-		List<Sensor> sensorList;
-		// register orientation sensor
-		sensorList = mSensorManager.getSensorList(Sensor.TYPE_ORIENTATION);
-		mSensorManager.registerListener(mSensorAccelerometer, sensorList.get(0), SensorManager.SENSOR_DELAY_GAME);
-
+		
 	}
 
 	@Override
@@ -798,8 +784,7 @@ public class TouchGameView extends SurfaceView implements SurfaceHolder.Callback
 	}
 
 	public void unregisterListener() {
-		mSensorManager.unregisterListener(mSensorAccelerometer);
-
+		
 	}
 }
 
