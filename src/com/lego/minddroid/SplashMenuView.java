@@ -18,6 +18,8 @@
 
 package com.lego.minddroid;
 
+import com.lego.minddroid.controller.GameConnector;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -46,13 +48,15 @@ public class SplashMenuView extends View {
 	Bitmap logo_splash_minddroid;
 	Bitmap mBackgroundImage;
 	
-	String[] mControllers = new String[] {"Tilt Controller", "Touch Controller"};
-	String[] mControllerClassNames = new String[] {GameConnector.TILT, GameConnector.TOUCH};
+	final String[] mControllers;
+	final String[] mControllerClassNames;
 
 	public SplashMenuView(Context context, Activity splashMenuActivity) {
 		super(context);
 		this.splashMenuActivity = splashMenuActivity;
 		res = context.getResources();
+		mControllers = GameConnector.getControllerLabels();
+		mControllerClassNames = GameConnector.getControllerClasses();
 	}
 
 	private int calcImgHeight(float originalImageHeight, float originalImageWidth) {
@@ -122,7 +126,7 @@ public class SplashMenuView extends View {
 						public void onClick(DialogInterface dialog, int which) {
 							Intent playGame = new Intent(splashMenuActivity.getBaseContext(), MINDdroid.class);
 							playGame.putExtra(SplashMenu.MINDDROID_ROBOT_TYPE, ((SplashMenu)splashMenuActivity).getRobotType());
-							playGame.putExtra(MINDdroid.GAME_CONTROLLER, mControllerClassNames[which]);
+							playGame.putExtra(GameConnector.EXTRA_GAME_CONTROLLER, mControllerClassNames[which]);
 							splashMenuActivity.startActivity(playGame);
 						}
 					}).create().show();

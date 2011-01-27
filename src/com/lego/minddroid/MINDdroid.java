@@ -39,7 +39,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 
-import com.lego.minddroid.GameConnector.GameThread;
+import com.lego.minddroid.controller.GameConnector;
+import com.lego.minddroid.controller.GameThread;
+import com.lego.minddroid.controller.TiltGameConnector;
+import com.lego.minddroid.controller.TouchGameConnector;
 
 public class MINDdroid extends Activity {
     public static final int UPDATE_TIME = 200;
@@ -71,8 +74,6 @@ public class MINDdroid extends Activity {
     private List<String> programList;
     private static final int MAX_PROGRAMS = 20;
     private String programToStart;
-    
-    public static final String GAME_CONTROLLER = "GAME_CONTROLLER";
 
     public static boolean isBtOnByUs() {
         return btOnByUs;
@@ -80,6 +81,10 @@ public class MINDdroid extends Activity {
 
     public static void setBtOnByUs(boolean btOnByUs) {
         MINDdroid.btOnByUs = btOnByUs;
+    }
+    
+    public int getRobotType() {
+    	return mRobotType;
     }
 
     /**
@@ -97,13 +102,7 @@ public class MINDdroid extends Activity {
         StartSound mySound = new StartSound(this);
         mySound.start();
         // setup our view, give it focus and display.
-        String controllerType = this.getIntent().getStringExtra(GAME_CONTROLLER);
-        if (GameConnector.TOUCH.equals(controllerType)) {
-        	mConnector = new TouchGameConnector(getApplicationContext(), this);
-        } else {
-        	mConnector = new TiltGameConnector(getApplicationContext(), this);
-        }
-        
+        mConnector = GameConnector.fromIntent(this, getIntent());
         mView = mConnector.getView();
         mThread = mConnector.getThread();
         mView.setFocusable(true);
