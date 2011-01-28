@@ -1,0 +1,100 @@
+<html>
+  <head>
+  <style>
+#control {
+  border:3px solid #aaa;
+}
+  </style>
+  <script type="text/javascript" 
+          src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script language='javascript' type='text/javascript' 
+            src='http://openjunction.github.com/JSJunction/json2.js'></script>
+    <script language='javascript' type='text/javascript' 
+            src='http://openjunction.github.com/JSJunction/strophejs/1.0.1/strophe.js'></script>
+    <script language='javascript' type='text/javascript' 
+            src='http://openjunction.github.com/JSJunction/junction/0.6.8/junction.js'></script>
+    
+    <script type="text/javascript">$(function(){
+var activity = {ad:"com.bjdodson.legobot"};
+
+var CANVAS_WIDTH = null;
+var CANVAS_HEIGHT = null;
+var controller = {
+    onMessageReceived: function(msg) {  }
+  , onActivityJoin: function() { 
+      setupCanvas();
+    }
+  , setActive: function(active) {
+    this.active = active;
+  }
+  , update: function(pt) {
+      if (this.active) {
+        this.draw(pt);
+        var cmd = (pt) ?
+           { "x" : "" + ((pt.x / CANVAS_WIDTH) - 0.5) * 100
+           , "y" : "" + ((pt.y / CANVAS_HEIGHT) - 0.5) * 100 }
+           : { "x" : "0" , "y" : "0" };
+        this.sendMessageToSession(cmd);
+      }
+  },
+  draw: function(pt) {
+    this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    if (!pt) return;
+    this.ctx.beginPath();
+    this.ctx.arc(pt.x, pt.y, 10, 0, Math.PI*2, true); 
+    this.ctx.closePath();
+    this.ctx.fill();
+  }
+};
+var p = prompt("Your robo session please!");
+activity.sessionID = "legobot" + p;
+JX.getInstance("sb.openjunction.org").newJunction(activity, controller);
+
+function getPlatformEvent(rawEv){
+ // Check to see if we are in the iPhone. If so,
+ // grab the native touch event. By its nature,
+ // the iPhone tracks multiple touch points; but,
+ // to keep this demo simple, just grab the first
+ // available touch event.
+
+ var ev = this.isIOS ? window.event.targetTouches[0] : rawEv;
+ ev.localX = ev.pageX - ev.target.offsetLeft;
+ ev.localY = ev.pageY - ev.target.offsetTop;
+
+ return ev;
+}
+
+function movePoint(rawEv) {
+  var e = getPlatformEvent(rawEv);
+  controller.update({"x" : e.localX, "y" : e.localY});
+}
+
+function startControl() {
+  controller.setActive(true);
+}
+
+function endControl() {
+  controller.update();
+  controller.setActive(false);
+}
+
+function setupCanvas() {
+  var canvas = document.getElementById('control');
+  CANVAS_WIDTH = $(canvas).width();
+  CANVAS_HEIGHT = $(canvas).height();
+  controller.ctx = canvas.getContext("2d");
+  $(canvas).bind("mousedown", startControl);
+  $(document).bind("mouseup", endControl);
+  $(canvas).bind("mousemove", movePoint);
+
+  $("#status").html("Commanding LegoBot.");
+  $("#control").show();
+}
+    });</script>
+  </head>
+
+  <body>
+    <div id="status">Loading...</div>
+    <canvas id="control" width="500" height="500"></canvas>
+  </body>
+</html>
